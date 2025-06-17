@@ -31,8 +31,8 @@ def convert_fold_list(wide_csv_path):
 
 def merge_dataframes(df_meta, df_folds):
 
-    print(f"✅ Loaded metadata: {len(df_meta)} rows")
-    print(f"✅ Loaded fold list: {len(df_folds)} rows")
+    print(f" Loaded metadata: {len(df_meta)} rows")
+    print(f" Loaded fold list: {len(df_folds)} rows")
 
     df_meta["filename"] = df_meta["filepath"].apply(lambda x: os.path.basename(x).strip())
 
@@ -44,20 +44,20 @@ def merge_dataframes(df_meta, df_folds):
 
 
     # Print a few examples
-    print("\n📂 Sample metadata filenames:")
+    print("\n Sample metadata filenames:")
     print(df_meta["filename"].unique()[:5])
 
-    print("\n📂 Sample fold-list filenames:")
+    print("\n Sample fold-list filenames:")
     print(df_folds["filename"].unique()[:5])
 
-    print("\n🔍 Unique tasks in metadata:", df_meta["task"].unique())
-    print("🔍 Unique tasks in folds:", df_folds["task"].unique())
+    print("\n Unique tasks in metadata:", df_meta["task"].unique())
+    print(" Unique tasks in folds:", df_folds["task"].unique())
 
-    print(f"\n✅ Merge complete: {len(df_merged)} rows")
+    print(f"\nMerge complete: {len(df_merged)} rows")
 
     # Save
     df_merged.to_csv("androids_metadata_with_folds.csv", index=False)
-    print("📁 Saved merged file: androids_metadata_with_folds.csv")
+    print("Saved merged file: androids_metadata_with_folds.csv")
 
     df_merged.drop(columns=["filename_no_ext", "filename_y"], inplace=True)
     df_merged.rename(columns={"filename_x": "filename"}, inplace=True)
@@ -65,14 +65,17 @@ def merge_dataframes(df_meta, df_folds):
 
     # Check for missing fold values
     missing = df_merged[df_merged["fold"].isna()]
-    print(f"\n❗ Files missing fold assignments: {len(missing)}")
+    print(f"\nFiles missing fold assignments: {len(missing)}")
 
     if not missing.empty:
-        print("\n🚫 Example missing entries:")
+        print("\nExample missing entries:")
         print(missing[["filename", "task"]].head())
 
 # Example usage
 df_folds = convert_fold_list(os.path.join("/home/vadim/ComputerScience/APR/Androids-Corpus", "fold-lists.csv"))
+print("🎧 Files assigned per fold in fold-list:")
+print(df_folds["fold"].value_counts())
+
 df_folds.to_csv("folds_long_format.csv", index=False)
 print(df_folds.head())
 df_meta = pd.read_csv("androids_metadata.csv")
