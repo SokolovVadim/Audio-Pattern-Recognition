@@ -1,82 +1,61 @@
 import pandas as pd
-import os
 
-def convert_fold_list(wide_csv_path):
-    df_raw = pd.read_csv(wide_csv_path, skiprows=1)  # skip "Read,,,Interview" row
-    fold_long = []
+# Define paths
+FOLD_LIST_PATH = "/home/vadim/ComputerScience/APR/Androids-Corpus/fold-lists.csv"
+OUTPUT_PATH = "folds_long_format.csv"
 
-    # Reading folds: columns 0–4
-    for col in df_raw.columns[:5]:
-        fold_num = int(col[-1])
-        for val in df_raw[col].dropna():
-            filename = val.strip("'")  # remove quotes
-            fold_long.append({
-                "filename": filename,
-                "fold": fold_num,
-                "task": "Reading"
-            })
+# Load original wide-format fold list
+df_raw = pd.read_csv(FOLD_LIST_PATH)
 
-    # Interview folds: columns 7–11 (index 7 to 11)
-    for col in df_raw.columns[7:12]:
-        fold_num = int(col[-1])
-        for val in df_raw[col].dropna():
-            filename = val.strip("'")
-            fold_long.append({
-                "filename": filename,
-                "fold": fold_num,
-                "task": "Interview"
-            })
+# Print column headers to verify
+print("🧾 Columns:", list(df_raw.columns))
 
-    return pd.DataFrame(fold_long)
+# Extract reading and interview fold blocks (skip header row)
+df_reading = df_raw.iloc[1:, 0:5].copy()
+df_interview = df_raw.iloc[1:, 7:12].copy()
 
-def merge_dataframes(df_meta, df_folds):
+# Rename columns for consistency
+df_reading.columns = ['fold1', 'fold2', 'fold3', 'fold4', 'fold5']
+df_interview.columns = ['fold1', 'fold2', 'fold3', 'fold4', 'fold5']
 
-    print(f" Loaded metadata: {len(df_meta)} rows")
-    print(f" Loaded fold list: {len(df_folds)} rows")
+# Convert to long format
+def to_long(df, task_name):
+    df_long = df.melt(var_name="fold_col", value_name="filename")
+    df_long = df_long.dropna()
+    df_long["filename"] = df_long["filename"].str.strip().str.replace("'", "")
+    df_long["task"] = task_name
+    df_long["fold"] = df_long["fold_col"].str.extract(r'fold(\d)').astype(int)
+    df_long["session_id"] = df_long["filename"]
+    df_long["speaker_id"] = df_long["filename"].str.extract(r"(\d+_[A-Z]{2}\d{2})")
+    return df_long[["session_id", "speaker_id", "fold", "task"]]
 
-    df_meta["filename"] = df_meta["filepath"].apply(lambda x: os.path.basename(x).strip())
+df_reading_long = to_long(df_reading, "Reading")
+df_interview_long = to_long(df_interview, "Interview")
 
-    df_meta["filename_no_ext"] = df_meta["filename"].apply(lambda x: os.path.splitext(x)[0])
-    df_folds["filename"] = df_folds["filename"].apply(lambda x: x.strip().strip("'"))
+# After merging df_reading_long and df_interview_long:
+df_folds = pd.concat([df_reading_long, df_interview_long], ignore_index=True)
 
-    # Now merge using filename without extension
-    df_merged = df_meta.merge(df_folds, left_on=["filename_no_ext", "task"], right_on=["filename", "task"], how="left")
+# Extract speaker ID from session_id (first part of ID)
+df_folds["speaker_id"] = df_folds["session_id"].str.extract(r"(\d+_[A-Z]{2}\d{2})")
 
-
-    # Print a few examples
-    print("\n Sample metadata filenames:")
-    print(df_meta["filename"].unique()[:5])
-
-    print("\n Sample fold-list filenames:")
-    print(df_folds["filename"].unique()[:5])
-
-    print("\n Unique tasks in metadata:", df_meta["task"].unique())
-    print(" Unique tasks in folds:", df_folds["task"].unique())
-
-    print(f"\nMerge complete: {len(df_merged)} rows")
-
-    # Save
-    df_merged.to_csv("androids_metadata_with_folds.csv", index=False)
-    print("Saved merged file: androids_metadata_with_folds.csv")
-
-    df_merged.drop(columns=["filename_no_ext", "filename_y"], inplace=True)
-    df_merged.rename(columns={"filename_x": "filename"}, inplace=True)
+# Keep only one fold assignment per speaker per task
+df_folds = df_folds.drop_duplicates(subset=["speaker_id", "task"])
 
 
-    # Check for missing fold values
-    missing = df_merged[df_merged["fold"].isna()]
-    print(f"\nFiles missing fold assignments: {len(missing)}")
+# Final check
+print("\n✅ Cleaned fold list (one fold per speaker):")
+print(df_folds.groupby(["task", "fold"]).size())
 
-    if not missing.empty:
-        print("\nExample missing entries:")
-        print(missing[["filename", "task"]].head())
+# Save
+df_folds.to_csv(OUTPUT_PATH, index=False)
 
-# Example usage
-df_folds = convert_fold_list(os.path.join("/home/vadim/ComputerScience/APR/Androids-Corpus", "fold-lists.csv"))
-print("🎧 Files assigned per fold in fold-list:")
-print(df_folds["fold"].value_counts())
+# Check that each speaker is assigned to only one fold per task
+speaker_fold_counts = df_folds.groupby(["speaker_id", "task"])["fold"].nunique()
+violations = speaker_fold_counts[speaker_fold_counts > 1]
+if not violations.empty:
+    print("\n❌ Violation: Some speakers appear in multiple folds per task!")
+    print(violations)
+else:
+    print("\n✅ All speakers assigned to one fold per task.")
 
-df_folds.to_csv("folds_long_format.csv", index=False)
-print(df_folds.head())
-df_meta = pd.read_csv("androids_metadata.csv")
-merge_dataframes(df_meta, df_folds)
+
