@@ -1,0 +1,108 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{authblk}
+
+\title{\textbf{Investigating Frame Size Effects on Mental State Classification\\ from the Androids Corpus}}
+\author{Vadim Sokolov}
+\affil{Department of Computer Science, University of Milan, Milan, Italy}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Mental state detection from speech is an important task in clinical settings, where non-invasive methods can support early diagnosis and monitoring. 
+In this work, we investigate how varying frame sizes affect the accuracy of mental state prediction using audio from the Androids Corpus. 
+We extract standard acoustic features (MFCCs, deltas, RMS) with varying temporal windows and evaluate performance using a linear classifier under a speaker-independent 5-fold protocol. 
+Preliminary results show a substantial improvement in accuracy as frame size increases, confirming the hypothesis that mental states vary slowly. 
+TODO: describe the results of further experiments with nonlinear models and additional acoustic descriptors.
+\end{abstract}
+
+\section{Introduction}
+Mental health disorders such as depression affect millions worldwide. Automatic detection of such conditions from speech offers a non-invasive, scalable, and cost-effective screening tool. Speech contains both linguistic and paralinguistic cues that can correlate with psychological states.
+
+In this study, we aim to explore how temporal framing in audio feature extraction affects classification performance. The assumption is that mental states change slowly over time, and thus longer frames might capture more relevant descriptors.
+
+\section{Related Work and Motivation}
+Previous work on the Androids Corpus \cite{androids2021} uses features extracted with OpenSMILE and evaluates classifiers using a speaker-independent 5-fold protocol. Other studies have employed deep learning, but often neglect the temporal resolution of acoustic features.
+
+Our goal is to systematically explore different frame lengths to understand how temporal granularity affects classification. We hypothesize that longer frames improve performance by capturing more stable features.
+
+\section{Methodology}
+
+\subsection{Dataset}
+We use the Androids Corpus, which contains recordings from interviews and reading tasks by individuals classified as either healthy controls or patients. The corpus includes:
+\begin{itemize}
+    \item Interview-Task audio clips (874 files)
+    \item Reading-Task recordings (112 files)
+    \item Labels: condition (PT vs. C)
+\end{itemize}
+
+\subsection{Feature Extraction}
+We extract the following features using \texttt{librosa}:
+\begin{itemize}
+    \item 13 MFCCs
+    \item Delta and Delta-Delta of MFCCs
+    \item Root Mean Square (RMS) Energy
+\end{itemize}
+
+We experiment with various frame sizes: 30ms, 100ms, 250ms, 500ms, 1000ms, and 5000ms. All features are normalized using standard scaling.
+
+\subsection{Classification}
+We start with a logistic regression model and evaluate frame-level accuracy and F1 score. The dataset is split using a speaker-independent 5-fold division, consistent with the original baseline setup.
+
+\section{Experiments and Results}
+
+\subsection{Evaluation Metrics}
+We use:
+\begin{itemize}
+    \item Frame-level accuracy
+    \item Frame-level F1 score
+    \item Confusion matrix (TBD)
+\end{itemize}
+
+\subsection{Results}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../out/PerformansOfFrameSizeLogScale.png}
+    \caption{Accuracy and F1 Score vs Frame Size (log-scale)}
+    \label{fig:performance}
+\end{figure}
+
+Initial results show that performance improves with larger frame sizes, peaking around 500–1000ms. See Figure \ref{fig:performance}.
+
+\section{Discussion}
+Larger frames provide better performance, suggesting that mental state-related features are better captured over longer time spans. 
+Short frames likely introduce variability and noise.
+
+TODO:
+\begin{itemize}
+    \item Train nonlinear models (Random Forest, SVM, MLP)
+    \item Add fundamental frequency and harmonicity-based features
+    \item Perform feature importance analysis across frame sizes
+\end{itemize}
+
+\section{Conclusion}
+This paper presents an analysis of frame size on speech-based mental state classification. 
+Our experiments show a clear performance trend in favor of longer frames, supporting the idea that slowly varying descriptors matter more. 
+TODO: refine these findings.
+
+\begin{thebibliography}{9}
+\bibitem{androids2021}
+Alessandro Vinciarelli, University of Glasgow et al. \textit{The Androids Corpus: A New Publicly Available Benchmark for Speech Based Depression Detection}. Interspeech 2023.
+
+\bibitem{librosa}
+Brian McFee et al. \textit{librosa: Audio and music signal analysis in Python}. Proceedings of the 14th python in science conference. 2015.
+
+\bibitem{sklearn}
+Pedregosa et al. \textit{Scikit-learn: Machine Learning in Python}. JMLR 2011.
+
+\end{thebibliography}
+
+\end{document}
