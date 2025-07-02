@@ -43,7 +43,23 @@ def extract_features_from_file(filepath, sr=16000, win_len_ms=30, step_ms=15, n_
     # Sanity check before stacking
     assert mfcc.shape[1] == delta.shape[1] == delta2.shape[1] == rms.shape[1]
 
-    features = np.vstack([mfcc, delta, delta2, rms])
+    f0 = librosa.yin(y, fmin=65, fmax=500, sr=sr, frame_length=n_fft, hop_length=hop_length)
+    harmonic, percussive = librosa.effects.hpss(y)
+    harmonic_energy = librosa.feature.rms(y=harmonic, frame_length=win_length, hop_length=hop_length)
+    total_energy = librosa.feature.rms(y=y, frame_length=win_length, hop_length=hop_length)
+    harmonic_ratio = harmonic_energy / (total_energy + 1e-6)
+
+    # Match frame length
+    min_len = min(mfcc.shape[1], f0.shape[0], harmonic_ratio.shape[1])
+    mfcc = mfcc[:, :min_len]
+    delta = delta[:, :min_len]
+    delta2 = delta2[:, :min_len]
+    rms = rms[:, :min_len]
+    f0 = f0[:min_len]
+    harmonic_ratio = harmonic_ratio[:, :min_len]
+
+
+    features = np.vstack([mfcc, delta, delta2, rms, f0[np.newaxis, :], harmonic_ratio])
     return features.T
 
 
@@ -89,7 +105,7 @@ def process_all_files(meta_csv, output_dir, win_len_ms=30, step_ms=15):
 if __name__ == "__main__":
     process_all_files(
         meta_csv="androids_metadata_with_folds.csv",
-        output_dir="features_30000ms",
-        win_len_ms=30000,
-        step_ms=30000
+        output_dir="features_5000ms_extended",
+        win_len_ms=5000,
+        step_ms=2500
     )
