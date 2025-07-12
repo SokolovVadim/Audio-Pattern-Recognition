@@ -1,6 +1,7 @@
-\documentclass[11pt]{article}
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
 
-\usepackage[a4paper, margin=1in]{geometry}
+%\usepackage[a4paper, margin=1in]{geometry}
 \usepackage{graphicx}
 \usepackage{caption}
 \usepackage{amsmath}
@@ -8,12 +9,18 @@
 \usepackage{hyperref}
 \usepackage{authblk}
 
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
 \title{\textbf{Investigating Frame Size Effects on Mental State Classification\\ from the Androids Corpus}}
+
+
 \author{Vadim Sokolov}
 \affil{Department of Computer Science, University of Milan, Milan, Italy}
 \date{}
 
-\begin{document}
 \maketitle
 
 \begin{abstract}
@@ -25,9 +32,12 @@ TODO: describe the results of further experiments with nonlinear models and addi
 \end{abstract}
 
 \section{Introduction}
-Mental health disorders such as depression affect millions worldwide. Automatic detection of such conditions from speech offers a non-invasive, scalable, and cost-effective screening tool. Speech contains both linguistic and paralinguistic cues that can correlate with psychological states.
+Mental health disorders such as depression affect millions worldwide. 
+Automatic detection of such conditions from speech offers a non-invasive, scalable, and cost-effective screening tool. 
+Speech contains both linguistic and paralinguistic cues that can correlate with psychological states.
 
-In this study, we aim to explore how temporal framing in audio feature extraction affects classification performance. The assumption is that mental states change slowly over time, and thus longer frames might capture more relevant descriptors.
+In this study, we aim to explore how temporal framing in audio feature extraction affects classification performance. 
+The assumption is that mental states change slowly over time, and thus longer frames might capture more relevant descriptors.
 
 \section{Related Work and Motivation}
 Previous work on the Androids Corpus \cite{androids2021} uses features extracted with OpenSMILE and evaluates classifiers using a speaker-independent 5-fold protocol. Other studies have employed deep learning, but often neglect the temporal resolution of acoustic features.
@@ -37,12 +47,33 @@ Our goal is to systematically explore different frame lengths to understand how 
 \section{Methodology}
 
 \subsection{Dataset}
-We use the Androids Corpus, which contains recordings from interviews and reading tasks by individuals classified as either healthy controls or patients. The corpus includes:
-\begin{itemize}
-    \item Interview-Task audio clips (874 files)
-    \item Reading-Task recordings (112 files)
-    \item Labels: condition (PT vs. C)
-\end{itemize}
+We use the Androids Corpus, which contains recordings from interviews and reading tasks by individuals classified as either healthy controls or patients.
+\begin{table}[h]
+\centering
+\caption{Summary of the Androids Corpus structure and contents.}
+%\begin{tabular}{p{4.2cm} p{8cm}}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Component} & \textbf{Description} \\
+\hline
+\texttt{Reading-Task/} & 112 audio recordings of participants reading a fairy tale. Subfolders: \texttt{HC/} (54 files) and \texttt{PT/} (58 files). \\
+\hline
+\texttt{Interview-Task/audio/} & 116 full interview recordings. Subfolders: \texttt{HC/} (52 files) and \texttt{PT/} (64 files). \\
+\hline
+\texttt{Interview-Task/} \newline \texttt{audio\_clip/} & 874 segmented audio clips from interviews, distributed over 116 subdirectories (one per speaker). \\
+%\texttt{fold-list.csv} & Lists of files for 5-fold speaker-independent evaluation. \\
+%\texttt{Androids.conf} & OpenSMILE configuration file for audio feature extraction. \\
+%\texttt{interview\_timedata.csv} & Turn-level segmentation metadata for the full interview recordings. \\
+\hline
+\texttt{Labels} & Each file is labeled by condition: \texttt{PT} (patient) or \texttt{C} (control). \\
+\hline
+\texttt{Naming convention} & \texttt{nn\_XGmm\_t.wav}, where fields encode speaker ID, condition, gender, age, and education level. \\
+\hline
+\end{tabular}
+%\caption{Summary of the Androids Corpus structure and contents.}
+\label{tab:androids_summary}
+\end{table}
+
 
 \subsection{Feature Extraction}
 We extract the following features using \texttt{librosa}:
@@ -52,10 +83,16 @@ We extract the following features using \texttt{librosa}:
     \item Root Mean Square (RMS) Energy
 \end{itemize}
 
-We experiment with various frame sizes: 30ms, 100ms, 250ms, 500ms, 1000ms, and 5000ms. All features are normalized using standard scaling.
+We experiment with various frame sizes: 20ms, 30ms, 100ms, 250ms, 500ms, 1000ms, 5000ms, and 10000ms. 
+We study 20s and 30s frame sizes to make sure the patterns no longer persist with drastically wide windows. 
+All features are normalized using standard scaling.
 
 \subsection{Classification}
-We start with a logistic regression model and evaluate frame-level accuracy and F1 score. The dataset is split using a speaker-independent 5-fold division, consistent with the original baseline setup.
+We start with a logistic regression model and evaluate frame-level accuracy and F1 score. 
+The dataset is split using a speaker-independent 5-fold division, consistent with the original baseline setup.
+Implemented file-level majority voting like a BS2 baseline in the original paper.
+Compared frame level against file level performance. TODO: add performance comparison.
+
 
 \section{Experiments and Results}
 
@@ -75,7 +112,112 @@ We use:
     \label{fig:performance}
 \end{figure}
 
-Initial results show that performance improves with larger frame sizes, peaking around 500–1000ms. See Figure \ref{fig:performance}.
+Initial results show that performance improves with larger frame sizes, peaking around 10000–20000ms. See Figure \ref{fig:performance}.
+
+% Linear model
+
+\begin{table}[h]
+\centering
+\caption{Linear model performance.}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Frame size, ms} & \textbf{Accuracy} & \textbf{F1-score}\\
+\hline
+20 & 0.6455 & 0.6278 \\
+\hline
+30 & 0.6506 & 0.6296 \\
+\hline
+100 & 0.6635 & 0.6337 \\
+\hline
+250 & 0.6583 & 0.6269 \\
+\hline
+500 & 0.6640 & 0.6300 \\
+\hline
+1000 & 0.6684 & 0.6296 \\
+\hline
+5000 & 0.7067 & 0.5829 \\
+\hline
+10000 & 0.7255 & 0.6400 \\
+\hline
+15000 & 0.7290 & 0.6849 \\
+\hline
+20000 & 0.7317 & 0.6786 \\
+\hline
+30000 & 0.7074 & 0.7074 \\
+\hline
+\end{tabular}
+\label{tab:linear_model_perf}
+\end{table}
+
+% Random forest
+
+\begin{table}[h]
+\centering
+\caption{Random forest performance.}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Frame size, ms} & \textbf{Accuracy} & \textbf{F1-score}\\
+\hline
+20 & 0.6799 & 0.6115 \\
+\hline
+30 & 0.6829 & 0.6115 \\
+\hline
+100 & 0.6788 & 0.6027 \\
+\hline
+250 & 0.6661 & 0.5907 \\
+\hline
+500 & 0.6618 & 0.5945 \\
+\hline
+1000 & 0.6589 & 0.5957 \\
+\hline
+5000 & 0.6693 & 0.5799 \\
+\hline
+10000 & 0.6894 & 0.6006 \\
+\hline
+15000 & 0.6898 & 0.6398 \\
+\hline
+20000 & 0.6477 & 0.5925 \\
+\hline
+30000 & 0.6352 & 0.5873 \\
+\hline
+\end{tabular}
+\label{tab:linear_model_perf}
+\end{table}
+
+% SVM
+
+\begin{table}[h]
+\centering
+\caption{SVM performance.}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Frame size, ms} & \textbf{Accuracy} & \textbf{F1-score}\\
+\hline
+20 & 0.6635 & 0.5833 \\
+\hline
+30 & 0.6736 & 0.5908 \\
+\hline
+100 & 0.6824 & 0.5976 \\
+\hline
+250 & 0.6996 & 0.6053 \\
+\hline
+500 & 0.6890 & 0.5854 \\
+\hline
+1000 & 0.6916 & 0.5823 \\
+\hline
+5000 & 0.7186 & 0.5217 \\
+\hline
+10000 & 0.7576 & 0.6196 \\
+\hline
+15000 & 0.7245 & 0.6455 \\
+\hline
+20000 & 0.7575 & 0.6427 \\
+\hline
+30000 & 0.7556 & 0.7054 \\
+\hline
+\end{tabular}
+\label{tab:linear_model_perf}
+\end{table}
 
 \section{Discussion}
 Larger frames provide better performance, suggesting that mental state-related features are better captured over longer time spans. 
@@ -87,6 +229,19 @@ TODO:
     \item Add fundamental frequency and harmonicity-based features
     \item Perform feature importance analysis across frame sizes
 \end{itemize}
+
+Feature importance analysis
+Directly extracted and visualized feature importances. Rms among the top features. That could indicate energy is a good mental state marker.
+TODO: create a summary table.
+
+
+
+
+When we compute feature importances from a Random Forest using .feature_importances_, what we're actually getting is the Mean Decrease in Impurity (MDI). 
+Impurity refers to how mixed the class labels are in a node.
+Higher MDI = Feature was used more often and split more samples while significantly reducing impurity thus, 
+more important.
+
 
 \section{Conclusion}
 This paper presents an analysis of frame size on speech-based mental state classification. 
