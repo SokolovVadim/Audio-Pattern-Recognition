@@ -2010,3 +2010,180 @@ File-level F1 Score: 0.7037
 Confusion Matrix (in %):
 [[41.67 15.  ]
  [11.67 31.67]]
+
+
+## PCA
+
+### Linear
+
+### 1000ms
+
+N_PC = 36
+
+Frame-level accuracy: 0.6712
+Frame-level F1 score: 0.6131
+
+File-level Accuracy (majority vote): 0.7522
+File-level F1 Score: 0.6410
+Confusion Matrix (in %):
+[[53.1  17.26]
+ [ 7.52 22.12]]
+
+
+### 5000ms
+
+N_PC = 37
+
+Frame-level accuracy: 0.7272
+Frame-level F1 score: 0.6767
+
+File-level Accuracy (majority vote): 0.7674
+File-level F1 Score: 0.6774
+Confusion Matrix (in %):
+[[52.33 15.12]
+ [ 8.14 24.42]]
+
+
+### 10000ms
+
+N_PC = 36
+
+Frame-level accuracy: 0.7216
+Frame-level F1 score: 0.6734
+
+File-level Accuracy (majority vote): 0.7556
+File-level F1 Score: 0.6667
+Confusion Matrix (in %):
+[[51.11 14.07]
+ [10.37 24.44]]
+
+
+### 15000ms
+
+N_PC = 34
+
+Frame-level accuracy: 0.7312
+Frame-level F1 score: 0.7138
+
+File-level Accuracy (majority vote): 0.6869
+File-level F1 Score: 0.6517
+Confusion Matrix (in %):
+[[39.39 23.23]
+ [ 8.08 29.29]]
+
+
+### Random Forest
+
+### 1000ms
+
+N_PC = 36
+100%|█████████████████████████████████████████| 100/100 [00:27<00:00,  3.64it/s]
+
+Frame-level accuracy: 0.6521
+Frame-level F1 score: 0.6050
+
+File-level Accuracy (majority vote): 0.7434
+File-level F1 Score: 0.6375
+Confusion Matrix (in %):
+[[51.77 18.58]
+ [ 7.08 22.57]]
+
+### 5000ms
+
+N_PC = 37
+100%|█████████████████████████████████████████| 100/100 [00:05<00:00, 17.92it/s]
+
+Frame-level accuracy: 0.7375
+Frame-level F1 score: 0.6934
+
+File-level Accuracy (majority vote): 0.8256
+File-level F1 Score: 0.7458
+Confusion Matrix (in %):
+[[56.98 10.47]
+ [ 6.98 25.58]]
+
+### 10000ms
+
+N_PC = 36
+100%|█████████████████████████████████████████| 100/100 [00:03<00:00, 31.13it/s]
+
+Frame-level accuracy: 0.7283
+Frame-level F1 score: 0.6981
+
+File-level Accuracy (majority vote): 0.7704
+File-level F1 Score: 0.6931
+Confusion Matrix (in %):
+[[51.11 14.07]
+ [ 8.89 25.93]]
+
+
+### 15000ms
+
+N_PC = 34
+100%|█████████████████████████████████████████| 100/100 [00:01<00:00, 57.84it/s]
+
+Frame-level accuracy: 0.6965
+Frame-level F1 score: 0.6749
+
+File-level Accuracy (majority vote): 0.6869
+File-level F1 Score: 0.6353
+Confusion Matrix (in %):
+[[41.41 21.21]
+ [10.1  27.27]]
+
+
+### SVM
+
+### 1000ms
+
+N_PC = 36
+
+Frame-level accuracy: 0.6801
+Frame-level F1 score: 0.5669
+
+File-level Accuracy (majority vote): 0.7522
+File-level F1 Score: 0.5692
+Confusion Matrix (in %):
+[[58.85 11.5 ]
+ [13.27 16.37]]
+
+
+### 5000ms
+
+N_PC = 37
+
+Frame-level accuracy: 0.7484
+Frame-level F1 score: 0.6679
+
+File-level Accuracy (majority vote): 0.8256
+File-level F1 Score: 0.7222
+Confusion Matrix (in %):
+[[59.88  7.56]
+ [ 9.88 22.67]]
+
+### 10000ms
+
+N_PC = 36
+
+Frame-level accuracy: 0.7399
+Frame-level F1 score: 0.6723
+
+File-level Accuracy (majority vote): 0.7704
+File-level F1 Score: 0.6437
+Confusion Matrix (in %):
+[[56.3   8.89]
+ [14.07 20.74]]
+
+
+### 15000ms
+
+N_PC = 34
+
+Frame-level accuracy: 0.7399
+Frame-level F1 score: 0.7020
+
+File-level Accuracy (majority vote): 0.7374
+File-level F1 Score: 0.6750
+Confusion Matrix (in %):
+[[46.46 16.16]
+ [10.1  27.27]]
