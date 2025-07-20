@@ -403,9 +403,10 @@ File-level accuracy evaluated as well. It was assesed by majority voting as in b
 
 \section{PCA analysis}
 
-PCA analysis is used to reduce features. 
-We are preserving 95\% of variance to transform the dataset.
-
+PCA analysis is used to reduce the number of features and therefore address the curse of dimensionality. 
+We are preserving 95\% of variance to transform the dataset and get less uncorrelated "principal components" that preserve most of the variance.
+For example, instead of 42 extended features we got 34-37 features.
+We used 1000ms, 5000ms, 10000ms, 15000ms frames to study the effect of PCA on accuracy.
 
 % linear
 
@@ -508,7 +509,14 @@ PCA might delute their effects.
 \label{tab:svm_pca}
 \end{table}
 
-TODO: describe PCA results
+Effect of PCA on File-level accuracy.
+For linear classifier, PCA improved results only at short frame size of 1000ms.
+For Random forest, PCA improved the results at shorter durations of 1000ms, 5000ms, possibly reducing overfitting.
+For SVM, PCA was beneficial at medium and long frames of 5000ms, 15000ms, which is typical for high dimentional models.
+
+To sum up, PCA is not always beneficial. 
+For linear models, PCA removes useful signal unless there is strong redundancy.
+For nonlinear models, PCA helps to reduce the noise and address the curse of dimensionality.
 
 \section{Conclusion}
 This paper presents an analysis of frame size on speech-based mental state classification. 
