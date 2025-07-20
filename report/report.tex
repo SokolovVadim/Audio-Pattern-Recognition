@@ -51,6 +51,7 @@ We use the Androids Corpus, which contains recordings from interviews and readin
 \begin{table}[h]
 \centering
 \caption{Summary of the Androids Corpus structure and contents.}
+\resizebox{\linewidth}{!}{
 %\begin{tabular}{p{4.2cm} p{8cm}}
 \begin{tabular}{|c|c|}
 \hline
@@ -70,6 +71,7 @@ We use the Androids Corpus, which contains recordings from interviews and readin
 \texttt{Naming convention} & \texttt{nn\_XGmm\_t.wav}, where fields encode speaker ID, condition, gender, age, and education level. \\
 \hline
 \end{tabular}
+}
 %\caption{Summary of the Androids Corpus structure and contents.}
 \label{tab:androids_summary}
 \end{table}
@@ -107,7 +109,7 @@ We use:
 \subsection{Results}
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{../out/PerformansOfFrameSizeLogScale.png}
+    \includegraphics[width=\linewidth]{../out/PerformansOfFrameSizeLogScale.png}
     \caption{Accuracy and F1 Score vs Frame Size (log-scale)}
     \label{fig:performance}
 \end{figure}
@@ -233,7 +235,7 @@ TODO:
 \subsection{Feature importance analysis}
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{../out/feature_imp_1000ms.png}
+    \includegraphics[width=\linewidth]{../out/feature_imp_1000ms.png}
     \caption{Feature importances from Random Forest model.}
     \label{fig:feature_importance}
 \end{figure}
@@ -291,6 +293,7 @@ more important.
 \begin{table}[h]
 \centering
 \caption{Linear model performance with added features.}
+\resizebox{\linewidth}{!}{
 \begin{tabular}{|c|c|c|c|c|}
 \hline
 \textbf{Frame size, ms} & \textbf{Frame-level Accuracy} & \textbf{Frame-level F1-score} & \textbf{File-level Accuracy} & \textbf{File-level F1-score} \\
@@ -318,6 +321,7 @@ more important.
 30000 & 0.7133 & 0.6993 & 0.7167 & 0.6909 \\
 \hline
 \end{tabular}
+}
 \label{tab:linear_model_added_feat_perf}
 \end{table}
 
@@ -328,6 +332,7 @@ File-level accuracy evaluated as well. It was assesed by majority voting as in b
 \begin{table}[h]
 \centering
 \caption{Random forest performance with added features.}
+\resizebox{\linewidth}{!}{
 \begin{tabular}{|c|c|c|c|c|}
 \hline
 \textbf{Frame size, ms} & \textbf{Frame-level Accuracy} & \textbf{Frame-level F1-score} & \textbf{File-level Accuracy} & \textbf{File-level F1-score} \\
@@ -355,6 +360,7 @@ File-level accuracy evaluated as well. It was assesed by majority voting as in b
 30000 & 0.7733 & 0.7792 & 0.8000 & 0.7931 \\
 \hline
 \end{tabular}
+}
 \label{tab:random_forest_added_feat_perf}
 \end{table}
 
@@ -363,6 +369,7 @@ File-level accuracy evaluated as well. It was assesed by majority voting as in b
 \begin{table}[h]
 \centering
 \caption{SVM performance with added features.}
+\resizebox{\linewidth}{!}{
 \begin{tabular}{|c|c|c|c|c|}
 \hline
 \textbf{Frame size, ms} & \textbf{Frame-level Accuracy} & \textbf{Frame-level F1-score} & \textbf{File-level Accuracy} & \textbf{File-level F1-score} \\
@@ -390,6 +397,7 @@ File-level accuracy evaluated as well. It was assesed by majority voting as in b
 30000 & 0.7333 & 0.7059 & 0.7333 & 0.7037 \\
 \hline
 \end{tabular}
+}
 \label{tab:svm_added_feat_perf}
 \end{table}
 
@@ -404,6 +412,7 @@ We are preserving 95\% of variance to transform the dataset.
 \begin{table}[h]
 \centering
 \caption{Linear model performance with PCA-reduced features.}
+\resizebox{\linewidth}{!}{
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline
 \textbf{Frame size, ms} & \textbf{PCA} & \textbf{Frame-level Accuracy} & \textbf{Frame-level F1-score} & \textbf{File-level Accuracy} & \textbf{File-level F1-score} \\
@@ -425,6 +434,7 @@ We are preserving 95\% of variance to transform the dataset.
 15000 & yes & 0.7312 & 0.7138 & 0.6869 & 0.6517 \\
 \hline
 \end{tabular}
+}
 \label{tab:linear_model_pca}
 \end{table}
 
@@ -441,6 +451,7 @@ PCA might delute their effects.
 \begin{table}[h]
 \centering
 \caption{Random Forest performance with PCA-reduced features.}
+\resizebox{\linewidth}{!}{
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline
 \textbf{Frame size, ms} & \textbf{PCA} & \textbf{Frame-level Accuracy} & \textbf{Frame-level F1-score} & \textbf{File-level Accuracy} & \textbf{File-level F1-score} \\
@@ -462,6 +473,7 @@ PCA might delute their effects.
 15000 & yes & 0.6965 & 0.6749 & 0.6869 & 0.6353 \\
 \hline
 \end{tabular}
+}
 \label{tab:random_forest_pca}
 \end{table}
 
@@ -470,6 +482,7 @@ PCA might delute their effects.
 \begin{table}[h]
 \centering
 \caption{SVM performance with PCA-reduced features.}
+\resizebox{\linewidth}{!}{
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline
 \textbf{Frame size, ms} & \textbf{PCA} & \textbf{Frame-level Accuracy} & \textbf{Frame-level F1-score} & \textbf{File-level Accuracy} & \textbf{File-level F1-score} \\
@@ -491,6 +504,7 @@ PCA might delute their effects.
 15000 & yes & 0.7399 & 0.7020 & 0.7374 & 0.6750 \\
 \hline
 \end{tabular}
+}
 \label{tab:svm_pca}
 \end{table}
 
