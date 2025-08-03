@@ -8,6 +8,11 @@
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{authblk}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning}
+
+\tikzstyle{block} = [rectangle, draw, rounded corners, minimum height=2em, minimum width=6em, align=center]
+\tikzstyle{arrow} = [-{Latex[length=3mm]}, thick]
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -46,6 +51,9 @@ Our goal is to systematically explore different frame lengths to understand how 
 
 \section{Methodology}
 
+The diagram of the method used is shown in Figure~\ref{fig:block-diagram}.
+TODO: describe the pipeline.
+
 \subsection{Dataset}
 We use the Androids Corpus, which contains recordings from interviews and reading tasks by individuals classified as either healthy controls or patients.
 \begin{table}[h]
@@ -57,24 +65,50 @@ We use the Androids Corpus, which contains recordings from interviews and readin
 \hline
 \textbf{Component} & \textbf{Description} \\
 \hline
-\texttt{Reading-Task/} & 112 audio recordings of participants reading a fairy tale. Subfolders: \texttt{HC/} (54 files) and \texttt{PT/} (58 files). \\
+\texttt{Reading-Task/} & 112 audio recordings of participants reading a fairy tale. \\
+    & Subfolders: \texttt{HC/} (54 files) and \texttt{PT/} (58 files). \\
 \hline
-\texttt{Interview-Task/audio/} & 116 full interview recordings. Subfolders: \texttt{HC/} (52 files) and \texttt{PT/} (64 files). \\
+\texttt{Interview-Task/audio/} & 116 full interview recordings. \\
+    & Subfolders: \texttt{HC/} (52 files) and \texttt{PT/} (64 files). \\
 \hline
-\texttt{Interview-Task/} \newline \texttt{audio\_clip/} & 874 segmented audio clips from interviews, distributed over 116 subdirectories (one per speaker). \\
-%\texttt{fold-list.csv} & Lists of files for 5-fold speaker-independent evaluation. \\
-%\texttt{Androids.conf} & OpenSMILE configuration file for audio feature extraction. \\
-%\texttt{interview\_timedata.csv} & Turn-level segmentation metadata for the full interview recordings. \\
+\texttt{Interview-Task/} \newline \texttt{audio\_clip/} & 874 segmented audio clips from interviews, \\
+    & distributed over 116 subdirectories (one per speaker). \\
 \hline
 \texttt{Labels} & Each file is labeled by condition: \texttt{PT} (patient) or \texttt{C} (control). \\
 \hline
-\texttt{Naming convention} & \texttt{nn\_XGmm\_t.wav}, where fields encode speaker ID, condition, gender, age, and education level. \\
+\texttt{Naming convention} & \texttt{nn\_XGmm\_t.wav}, where fields encode speaker ID, \\
+    & condition, gender, age, and education level. \\
 \hline
 \end{tabular}
 }
 %\caption{Summary of the Androids Corpus structure and contents.}
 \label{tab:androids_summary}
 \end{table}
+
+\begin{figure*}[ht]
+\begin{center}
+\begin{tikzpicture}[node distance=1.8cm and 1cm, scale=0.75, transform shape]
+
+\node[block] (audio) {Raw Audio File\\(16kHz, mono)};
+\node[block, right=of audio] (frames) {Frame-based\\Segmentation\\(e.g., 1000ms)};
+\node[block, right=of frames] (features) {Feature Extraction\\(MFCC, $\Delta^2$, etc)};
+\node[block, right=of features] (ml) {ML Classifier\\(Linear / RF / SVM)};
+\node[block, right=of ml] (framepred) {Frame-level\\Predictions};
+\node[block, right=of framepred] (vote) {File-level\\Majority Voting};
+\node[block, right=of vote] (final) {Final\\Decision};
+
+\draw[arrow] (audio) -- (frames);
+\draw[arrow] (frames) -- (features);
+\draw[arrow] (features) -- (ml);
+\draw[arrow] (ml) -- (framepred);
+\draw[arrow] (framepred) -- (vote);
+\draw[arrow] (vote) -- (final);
+
+\end{tikzpicture}
+\caption{Overview of the proposed processing pipeline.}
+\label{fig:block-diagram}
+\end{center}
+\end{figure*}
 
 
 \subsection{Feature Extraction}
@@ -91,9 +125,13 @@ All features are normalized using standard scaling.
 
 \subsection{Classification}
 We start with a logistic regression model and evaluate frame-level accuracy and F1 score. 
-The dataset is split using a speaker-independent 5-fold division, consistent with the original baseline setup.
+The dataset is split using a speaker-independent 5-fold division, consistent with the original baseline setup, which can be seen at Table~\ref{tab:androids_summary}.
 Implemented file-level majority voting like a BS2 baseline in the original paper.
-Compared frame level against file level performance. TODO: add performance comparison.
+Compared frame level against file level performance.
+Different models (Linear, RF, SVM) were tested separately and compared using cross-validation.
+
+TODO: add performance comparison.
+TODO: add Confusion matrix
 
 
 \section{Experiments and Results}
@@ -225,13 +263,6 @@ Initial results show that performance improves with larger frame sizes, peaking 
 Larger frames provide better performance, suggesting that mental state-related features are better captured over longer time spans. 
 Short frames likely introduce variability and noise.
 
-TODO:
-\begin{itemize}
-    \item Train nonlinear models (Random Forest, SVM, MLP)
-    \item Add fundamental frequency and harmonicity-based features
-    \item Perform feature importance analysis across frame sizes
-\end{itemize}
-
 \subsection{Feature importance analysis}
 \begin{figure}[h]
     \centering
@@ -278,7 +309,7 @@ That could indicate energy is a good mental state marker.
 \end{table}
 
 
-Frome the table INSERT TABLE WITH FEATURE IMPORTANCE one can see that the RMS is one of the important features. 
+From the Table~\ref{tab:feaure_importance} one can see that the RMS is one of the important features. 
 I moves from top 3 features to 4th place for the frame size 20s and 30s.
 When we compute feature importances from a Random Forest using \texttt{.feature\_importances\_}, what we're actually getting is the Mean Decrease in Impurity (MDI). 
 Impurity refers to how mixed the class labels are in a node.
