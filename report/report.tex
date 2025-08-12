@@ -36,23 +36,24 @@ We extract standard acoustic features (MFCCs, deltas, RMS) with varying temporal
 We augmented the feature set with additional acoustic descriptors. 
 Results show that nonlinear models achieve higher accuracy than the linear baseline, with the best performance exceeding 80\% when using longer frame sizes (5–10 seconds). 
 The added features improved SVM performance in specific configurations but did not benefit all models. 
-PCA-based dimensionality reduction generally lowered frame-level accuracy. 
 These findings highlight the interaction between model choice, feature selection, and temporal resolution in speech based mental state detection.
 
 \end{abstract}
 
 \section{Introduction}
-Mental health disorders such as depression affect millions worldwide. 
-Automatic detection of such conditions from speech offers a non-invasive, scalable, and cost-effective screening tool. 
-Speech contains both linguistic and paralinguistic cues that can correlate with psychological states.
+Mental health disorders such as depression affect millions of people worldwide. 
+Automatic detection of such conditions from speech gives a non invasive, scalable, and cost-effective screening mechanism. 
+Speech contains both linguistic and paralinguistic features that can correlate with psychological states.
 
-In this study, we aim to explore how temporal framing in audio feature extraction affects classification performance. 
+In this study, our goal is to explore how temporal framing in audio feature extraction affects classification performance. 
 The assumption is that mental states change slowly over time, and thus longer frames might capture more relevant descriptors.
 
 \section{Related Work and Motivation}
-Previous work on the Androids Corpus \cite{androids2021} uses features extracted with OpenSMILE and evaluates classifiers using a speaker-independent 5-fold protocol. Other studies have employed deep learning, but often neglect the temporal resolution of acoustic features.
+Previous work on the Androids Corpus \cite{androids2021} uses features extracted with OpenSMILE and evaluates classifiers using a speaker-independent 5-fold protocol. 
+Other studies utilized deep learning, but often does not take into consideration the temporal resolution of acoustic features.
 
-Our goal is to systematically explore different frame lengths to understand how temporal granularity affects classification. We hypothesize that longer frames improve performance by capturing more stable features.
+Our goal is to explore different frame lengths to understand how temporal granularity affects classification. 
+We hypothesize that longer frames improve performance by capturing more stable features.
 
 \section{Methodology}
 
@@ -61,20 +62,15 @@ The audio recordings were resampled to 16 kHz and converted to mono.
 Frame-based feature extraction was performed using window sizes of 20 ms to 30 s, with a 50\% overlap. 
 For each frame, the following features were extracted:
 
-MFCCs (13 coefficients) — capturing the spectral shape of the signal.
-
-Delta and Delta-Delta MFCCs (13 each) — representing temporal dynamics.
-
-Root Mean Square (RMS) energy — measuring signal power.
-
-Fundamental frequency (F0) — estimated using librosa.yin for pitch-related information.
-
-Harmonic Ratio — calculated as the ratio between harmonic and total energy via Harmonic-Percussive Source Separation (HPSS).
-
+MFCCs (13 coefficients) capture the spectral shape of the signal.
+Delta and Delta-Delta MFCCs (13 each) represent temporal dynamics.
+Root Mean Square (RMS) energy measures signal power.
+Fundamental frequency (F0) is estimated using \texttt{librosa.yin} \cite{librosa} for pitch-related information.
+Harmonic Ratio is calculated as the ratio between harmonic and total energy via Harmonic-Percussive Source Separation (HPSS).
 Each audio file was converted to a sequence of feature vectors (frames), with an optional aggregation step (mean) or majority voting used later for classification.
 
-For the SVM classifier, an RBF kernel was used. 
-Initial hyperparameters were obtained through a combination of grid search and manual tuning, resulting in C = 0.3, $\gamma = 0.01$, and class weights {0: 1.0, 1: 0.8}. 
+For the SVM classifier, an RBF kernel was used. The model was implemented using the Scikit-learn library \cite{sklearn}.
+Initial hyperparameters were obtained via a combination of grid search and manual tuning: C = 0.3, $\gamma = 0.01$, and class weights {0: 1.0, 1: 0.8}. 
 These served as the baseline parameters for experiments prior to adding new features.
 
 \subsection{Dataset}
@@ -142,7 +138,7 @@ We extract the following features using \texttt{librosa}:
     \item Root Mean Square (RMS) Energy
 \end{itemize}
 
-We experiment with various frame sizes: 20ms, 30ms, 100ms, 250ms, 500ms, 1000ms, 5000ms, and 10000ms. 
+We experiment with different frame sizes: 20ms, 30ms, 100ms, 250ms, 500ms, 1000ms, 5000ms, and 10000ms. 
 We study 20s and 30s frame sizes to make sure the patterns no longer persist with drastically wide windows. 
 All features are normalized using standard scaling.
 The dataset was filtered so no speaker appears in both train and test sets.
@@ -157,9 +153,9 @@ to perform depression vs. control classification at the frame level.
 
 \subsection{PCA analysis}
 
-Principal Component Analysis (PCA) was applied after feature standardization to mitigate the curse of dimensionality. 
-PCA was fitted on the training set and applied to both training and test sets, retaining the minimum number of components explaining at least 95\% of the variance. 
-This step was repeated for each frame size and model to ensure adaptation to the specific data distribution.
+Principal Component Analysis (PCA) was applied after feature standardization to address the curse of dimensionality. 
+PCA was fitted on the training set and applied to both training and test sets. It retained the minimum number of components to keep at least 95\% of the variance. 
+This step was repeated for each frame size and the testing model to provide adaptation to the specific data distribution.
 
 \section{Experiments and Results}
 
@@ -188,15 +184,29 @@ One can see precise results in a Table~\ref{tab:linear_model_perf}, Table~\ref{t
 
 \subsection{Feature importance analysis}
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{../out/feature_imp_1000ms.png}
+    \caption{Feature importances from Random Forest model.}
+    \label{fig:feature_importance}
+\end{figure}
+
 After the performance comparison it was decided to analyze the feature importance and possibly add some more of them to the models.
 The feature importance analysis was conducted to a Random Forest model. 
 It is shown as an example in Figure~\ref{fig:feature_importance} for the frame size of 1000ms.
 
-The top features were identified as follows: mmcf\_2, mfcc\_1, and rms. 
+The top features were identified as follows: mmcf\_2, mfcc\_1, and RMS. 
 These features were not consistent across all frame sizes. 
 The statistics changed for larger frame sizes, where other features like mfcc\_13 appeared.
 
 \subsection{Performance of the classifiers with added features}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{../out/modelPerfvsFrameSizeAdded.png}
+    \caption{Accuracy and F1 Score with added features vs Frame Size (log-scale)}
+    \label{fig:model_perf_added}
+\end{figure}
 
 We added more features to the models, such as fundamental frequency (F0) and harmonic ratio, to see if they improve performance.
 The model performance can be seen on Table~\ref{tab:linear_model_added_feat_perf}, Table~\ref{tab:random_forest_added_feat_perf}, and Table~\ref{tab:svm_added_feat_perf}.
@@ -350,15 +360,9 @@ Larger frames provide better performance, suggesting that mental state-related f
 Short frames likely introduce variability and noise.
 
 \subsection{Feature importance analysis}
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\linewidth]{../out/feature_imp_1000ms.png}
-    \caption{Feature importances from Random Forest model.}
-    \label{fig:feature_importance}
-\end{figure}
 
 Directly extracted and visualized feature importances. 
-Rms among the top features. 
+As a result, one can see that RMS is among the top features. 
 That could indicate energy is a good mental state marker.
 
 \begin{table}[h]
@@ -395,8 +399,7 @@ That could indicate energy is a good mental state marker.
 \end{table}
 
 
-From the Table~\ref{tab:feaure_importance} one can see that the RMS is one of the important features. 
-It moves from top 3 features to 4th place for the frame size 20s and 30s.
+From the Table~\ref{tab:feaure_importance} one can see that the RMS moves from top 3 features to 4th place for the frame size 20s and 30s.
 When we compute feature importances from a Random Forest using \texttt{.feature\_importances\_}, what we're actually getting is the Mean Decrease in Impurity (MDI). 
 Impurity refers to how mixed the class labels are in a node.
 Higher MDI equals to a fact that feature was used more often and split more samples while significantly reducing impurity thus, 
@@ -444,7 +447,8 @@ more important.
 
 % random forest
 
-File-level accuracy evaluated as well. It was assesed by majority voting as in bs2 baseline.
+File-level accuracy was evaluated as well. It was estimated by majority voting as in bs2 baseline.
+F1 score for random forest is remarkably high in file level estimation, reaching 0.79 fir 30s frames (see Figure~\ref{fig:model_perf_added}).
 
 \begin{table}[h]
 \centering
@@ -554,10 +558,10 @@ File-level accuracy evaluated as well. It was assesed by majority voting as in b
 
 PCA for linear classifier gives slightly worse results than without PCA.
 There are several reasons why PCA hurts linear model performance. 
-First, PCA is unsupervised, it preserves the variance and doesn't preserve class-separability.
+First, PCA is unsupervised, it preserves the variance and doesn't preserve the separation of classes.
 It can remove important discriminative information for the classifier.
-Second, our features may already be informative, good in separating classes.
-PCA might delute their effects.
+Second, the used features may already be informative, good in separating classes.
+PCA might delute their effects. 
 
 % Random forest
 
