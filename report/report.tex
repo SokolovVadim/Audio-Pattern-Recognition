@@ -9,6 +9,7 @@
 \usepackage{hyperref}
 \usepackage{authblk}
 \usepackage{tikz}
+\usepackage{subcaption}
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning}
 
 \tikzstyle{block} = [rectangle, draw, rounded corners, minimum height=2em, minimum width=6em, align=center]
@@ -29,11 +30,15 @@
 \maketitle
 
 \begin{abstract}
-Mental state detection from speech is an important task in clinical settings, where non-invasive methods can support early diagnosis and monitoring. 
+Mental state detection from speech is an important task in clinical cases, that can support early diagnosis and monitoring. 
 In this work, we investigate how varying frame sizes affect the accuracy of mental state prediction using audio from the Androids Corpus. 
-We extract standard acoustic features (MFCCs, deltas, RMS) with varying temporal windows and evaluate performance using a linear classifier under a speaker-independent 5-fold protocol. 
-Preliminary results show a substantial improvement in accuracy as frame size increases, confirming the hypothesis that mental states vary slowly. 
-TODO: describe the results of further experiments with nonlinear models and additional acoustic descriptors.
+We extract standard acoustic features (MFCCs, deltas, RMS) with varying temporal windows and evaluate performance using linear model, Random Forest and SVM, confirming the hypothesis that mental states vary slowly. 
+We augmented the feature set with additional acoustic descriptors. 
+Results show that nonlinear models achieve higher accuracy than the linear baseline, with the best performance exceeding 80\% when using longer frame sizes (5–10 seconds). 
+The added features improved SVM performance in specific configurations but did not benefit all models. 
+PCA-based dimensionality reduction generally lowered frame-level accuracy. 
+These findings highlight the interaction between model choice, feature selection, and temporal resolution in speech based mental state detection.
+
 \end{abstract}
 
 \section{Introduction}
@@ -52,7 +57,25 @@ Our goal is to systematically explore different frame lengths to understand how 
 \section{Methodology}
 
 The diagram of the method used is shown in Figure~\ref{fig:block-diagram}.
-TODO: describe the pipeline.
+The audio recordings were resampled to 16 kHz and converted to mono. 
+Frame-based feature extraction was performed using window sizes of 20 ms to 30 s, with a 50\% overlap. 
+For each frame, the following features were extracted:
+
+MFCCs (13 coefficients) — capturing the spectral shape of the signal.
+
+Delta and Delta-Delta MFCCs (13 each) — representing temporal dynamics.
+
+Root Mean Square (RMS) energy — measuring signal power.
+
+Fundamental frequency (F0) — estimated using librosa.yin for pitch-related information.
+
+Harmonic Ratio — calculated as the ratio between harmonic and total energy via Harmonic-Percussive Source Separation (HPSS).
+
+Each audio file was converted to a sequence of feature vectors (frames), with an optional aggregation step (mean) or majority voting used later for classification.
+
+For the SVM classifier, an RBF kernel was used. 
+Initial hyperparameters were obtained through a combination of grid search and manual tuning, resulting in C = 0.3, $\gamma = 0.01$, and class weights {0: 1.0, 1: 0.8}. 
+These served as the baseline parameters for experiments prior to adding new features.
 
 \subsection{Dataset}
 We use the Androids Corpus, which contains recordings from interviews and reading tasks by individuals classified as either healthy controls or patients.
@@ -122,37 +145,93 @@ We extract the following features using \texttt{librosa}:
 We experiment with various frame sizes: 20ms, 30ms, 100ms, 250ms, 500ms, 1000ms, 5000ms, and 10000ms. 
 We study 20s and 30s frame sizes to make sure the patterns no longer persist with drastically wide windows. 
 All features are normalized using standard scaling.
+The dataset was filtered so no speaker appears in both train and test sets.
 
 \subsection{Classification}
 We start with a logistic regression model and evaluate frame-level accuracy and F1 score. 
 The dataset is split using a speaker-independent 5-fold division, consistent with the original baseline setup, which can be seen at Table~\ref{tab:androids_summary}.
 Implemented file-level majority voting like a BS2 baseline in the original paper.
 Compared frame level against file level performance.
-Different models (Linear, RF, SVM) were tested separately and compared using cross-validation.
+Different models (Linear, RF, SVM) were tested separately and compared using speaker independent 5-fold cross-validation 
+to perform depression vs. control classification at the frame level.
 
-TODO: add performance comparison.
-TODO: add Confusion matrix
+\subsection{PCA analysis}
 
+Principal Component Analysis (PCA) was applied after feature standardization to mitigate the curse of dimensionality. 
+PCA was fitted on the training set and applied to both training and test sets, retaining the minimum number of components explaining at least 95\% of the variance. 
+This step was repeated for each frame size and model to ensure adaptation to the specific data distribution.
 
 \section{Experiments and Results}
 
 \subsection{Evaluation Metrics}
-We use:
+For frame level evaluation the following metrics were used:
 \begin{itemize}
     \item Frame-level accuracy
     \item Frame-level F1 score
     \item Confusion matrix (TBD)
 \end{itemize}
 
+For file level evaluation the majority voting was used to align with BS2 baseline, improve robustness.
+
 \subsection{Results}
+
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\linewidth]{../out/PerformansOfFrameSizeLogScale.png}
+    \includegraphics[width=\linewidth]{../out/modelPerfvsFrameSize.png}
     \caption{Accuracy and F1 Score vs Frame Size (log-scale)}
-    \label{fig:performance}
+    \label{fig:model_perf}
 \end{figure}
 
-Initial results show that performance improves with larger frame sizes, peaking around 10000–20000ms. See Figure \ref{fig:performance}.
+Initial results show that performance improves with larger frame sizes, peaking around 10000–20000ms.
+At the plots \ref{fig:model_perf} one can see the comparison between different classifiers: Logistic regression, Random Forest, and SVM.
+One can see precise results in a Table~\ref{tab:linear_model_perf}, Table~\ref{tab:random_forest_perf}, and Table~\ref{tab:svm_perf}.
+
+\subsection{Feature importance analysis}
+
+After the performance comparison it was decided to analyze the feature importance and possibly add some more of them to the models.
+The feature importance analysis was conducted to a Random Forest model. 
+It is shown as an example in Figure~\ref{fig:feature_importance} for the frame size of 1000ms.
+
+The top features were identified as follows: mmcf\_2, mfcc\_1, and rms. 
+These features were not consistent across all frame sizes. 
+The statistics changed for larger frame sizes, where other features like mfcc\_13 appeared.
+
+\subsection{Performance of the classifiers with added features}
+
+We added more features to the models, such as fundamental frequency (F0) and harmonic ratio, to see if they improve performance.
+The model performance can be seen on Table~\ref{tab:linear_model_added_feat_perf}, Table~\ref{tab:random_forest_added_feat_perf}, and Table~\ref{tab:svm_added_feat_perf}.
+
+
+% \begin{figure}[ht]
+%     \centering
+%     \includegraphics[width=0.48\textwidth]{../out/lr_cm_file_level.png}
+%     \caption{Confusion matrix (\%) for file-level classification using Random Forest, frame size = 10s.}
+%     \label{fig:cm_lr_10s}
+% \end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \captionsetup{font=small}
+    \begin{subfigure}[b]{0.23\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../out/rf_cm_file_level_10000ms.png}
+        \caption{Random Forest, frame size = 10s}
+        \label{fig:cm_rf_10s}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.23\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../out/svm_cm_file_level_5000ms.png}
+        \caption{SVM, frame size = 5s}
+        \label{fig:cm_svm_5s}
+    \end{subfigure}
+    \caption{Confusion matrices (\%) for file-level classification.}
+    \label{fig:cm_comparison}
+\end{figure}
+
+Figure \ref{fig:cm_comparison} shows the file-level confusion matrices (in \%) for the best-performing configurations of SVM and Random Forest.
+The model correctly classified 62.21\% of class 0 samples and 19.19\% of class 1 samples, with most misclassifications coming from class 1 being labeled as class 0 (13.37\%).
+Random forest model achieved a more balanced performance between classes, with a lower false negative rate compared to SVM.
 
 % Linear model
 
@@ -259,6 +338,13 @@ Initial results show that performance improves with larger frame sizes, peaking 
 \label{tab:svm_perf}
 \end{table}
 
+\subsection{PCA analysis}
+PCA analysis is used to reduce the number of features and therefore address the curse of dimensionality. 
+We are preserving 95\% of variance to transform the dataset and get less uncorrelated "principal components" that preserve most of the variance.
+For example, instead of 42 extended features we got 34-37 features.
+We used 1000ms, 5000ms, 10000ms, 15000ms frames to study the effect of PCA on accuracy.
+The tables \ref{tab:linear_model_pca}, \ref{tab:random_forest_pca}, and \ref{tab:svm_pca} represent classifiers performance with PCA reduced features.
+
 \section{Discussion}
 Larger frames provide better performance, suggesting that mental state-related features are better captured over longer time spans. 
 Short frames likely introduce variability and noise.
@@ -310,7 +396,7 @@ That could indicate energy is a good mental state marker.
 
 
 From the Table~\ref{tab:feaure_importance} one can see that the RMS is one of the important features. 
-I moves from top 3 features to 4th place for the frame size 20s and 30s.
+It moves from top 3 features to 4th place for the frame size 20s and 30s.
 When we compute feature importances from a Random Forest using \texttt{.feature\_importances\_}, what we're actually getting is the Mean Decrease in Impurity (MDI). 
 Impurity refers to how mixed the class labels are in a node.
 Higher MDI equals to a fact that feature was used more often and split more samples while significantly reducing impurity thus, 
@@ -432,12 +518,7 @@ File-level accuracy evaluated as well. It was assesed by majority voting as in b
 \label{tab:svm_added_feat_perf}
 \end{table}
 
-\section{PCA analysis}
-
-PCA analysis is used to reduce the number of features and therefore address the curse of dimensionality. 
-We are preserving 95\% of variance to transform the dataset and get less uncorrelated "principal components" that preserve most of the variance.
-For example, instead of 42 extended features we got 34-37 features.
-We used 1000ms, 5000ms, 10000ms, 15000ms frames to study the effect of PCA on accuracy.
+\subsection{PCA analysis}
 
 % linear
 
@@ -551,8 +632,12 @@ For nonlinear models, PCA helps to reduce the noise and address the curse of dim
 
 \section{Conclusion}
 This paper presents an analysis of frame size on speech-based mental state classification. 
-Our experiments show a clear performance trend in favor of longer frames, supporting the idea that slowly varying descriptors matter more. 
-TODO: refine these findings.
+Our experiments show a consistent trend where longer frame sizes (10–20 seconds) yield higher file-level accuracy, supporting the hypothesis that slowly varying speech descriptors carry more discriminative information for this task.
+We also compared models with and without additional features (fundamental frequency, harmonic ratio) and with PCA-based dimensionality reduction. 
+While these features improved SVM performance in certain frame-size configurations, they did not benefit the linear model and sometimes decreased performance due to the curse of dimensionality. 
+PCA occasionally improved results, particularly for Random Forest and SVM with smaller frame sizes (1–5 seconds), but generally led to lower frame-level accuracy.
+The best file-level accuracy achieved was above 80\% using Random Forest (10s frames) and SVM (5s frames), with majority voting per file as in the BS2 baseline from the original dataset paper. 
+These findings confirm that longer analysis windows help capture stable characteristics relevant to mental state detection while model choice and feature selection interact strongly with the optimal frame size.
 
 \begin{thebibliography}{9}
 \bibitem{androids2021}
