@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Load data
-df = pd.read_csv("full_dataset_30000ms.csv")
+df = pd.read_csv("full_dataset_100ms_extended.csv")
 
 # print("Fold distribution:")
 # print(df["fold"].value_counts())
@@ -71,11 +71,34 @@ print("Test:", np.bincount(y_test))
 classes = [0, 1]
 all_labels = np.concatenate([y_train, y_test])  # or better, just from entire original data
 
-svc = SVC(C=0.3, gamma=0.005, class_weight={0: 1.0, 1: 0.8})
+svc = SVC(C=0.3, gamma=0.01, class_weight={0: 1.1, 1: 0.8})
 
 svc.fit(X_train, y_train)
 
 y_pred = svc.predict(X_test)
+
+# Add predictions and file info to DataFrame
+test_df = test.copy()
+test_df["pred"] = y_pred
+
+from collections import Counter
+
+# Majority vote per file
+file_preds = []
+file_truths = []
+
+for file, group in test_df.groupby("file"):
+    pred_majority = Counter(group["pred"]).most_common(1)[0][0]
+    true_label = group["label"].iloc[0]
+    
+    file_preds.append(pred_majority)
+    file_truths.append(true_label)
+
+# File-level metrics
+file_acc = accuracy_score(file_truths, file_preds)
+file_f1 = f1_score(file_truths, file_preds)
+file_cm = confusion_matrix(file_truths, file_preds)
+file_cm_percent = file_cm / file_cm.sum() * 100
 
 # Evaluate
 acc = accuracy_score(y_test, y_pred)
@@ -89,7 +112,13 @@ cm_percent = cm / cm.sum() * 100
 # plt.title("Confusion Matrix")
 # plt.show()
 
+# Frame-level results
 print(f"\nFrame-level accuracy: {acc:.4f}")
 print(f"Frame-level F1 score: {f1:.4f}")
+
+# File-level results
+print(f"\nFile-level Accuracy (majority vote): {file_acc:.4f}")
+print(f"File-level F1 Score: {file_f1:.4f}")
 print("Confusion Matrix (in %):")
-print(np.round(cm_percent, 2))
+print(np.round(file_cm_percent, 2))
+

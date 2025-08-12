@@ -1,5 +1,4 @@
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
@@ -12,7 +11,7 @@ import numpy as np
 from tqdm import tqdm
 
 # Load data
-df = pd.read_csv("full_dataset_10000ms_extended.csv")
+df = pd.read_csv("full_dataset_30000ms_extended.csv")
 
 print("Fold distribution:")
 print(df["fold"].value_counts())
@@ -56,19 +55,39 @@ for i in tqdm(range(1, n_estimators + 1)):
 # Predict
 y_pred = clf.predict(X_test)
 
-# Evaluate
+# Evaluate frame-level
 acc = accuracy_score(y_test, y_pred)
 f1 = f1_score(y_test, y_pred)
-cm = confusion_matrix(y_test, y_pred)
-cm_percent = cm / cm.sum() * 100
 
-# sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-# plt.xlabel("Predicted Label")
-# plt.ylabel("True Label")
-# plt.title("Confusion Matrix")
-# plt.show()
+# Add predictions to test DataFrame
+test_df = test.copy()
+test_df["pred"] = y_pred
 
+# Majority vote per file
+from collections import Counter
+
+file_preds = []
+file_truths = []
+
+for file, group in test_df.groupby("file"):
+    pred_majority = Counter(group["pred"]).most_common(1)[0][0]
+    true_label = group["label"].iloc[0]
+    
+    file_preds.append(pred_majority)
+    file_truths.append(true_label)
+
+# Evaluate file-level
+file_acc = accuracy_score(file_truths, file_preds)
+file_f1 = f1_score(file_truths, file_preds)
+
+cm_file = confusion_matrix(file_truths, file_preds)
+cm_file_percent = cm_file / cm_file.sum() * 100
+
+# Print results
 print(f"\nFrame-level accuracy: {acc:.4f}")
 print(f"Frame-level F1 score: {f1:.4f}")
+
+print(f"\nFile-level Accuracy (majority vote): {file_acc:.4f}")
+print(f"File-level F1 Score: {file_f1:.4f}")
 print("Confusion Matrix (in %):")
-print(np.round(cm_percent, 2))
+print(np.round(cm_file_percent, 2))

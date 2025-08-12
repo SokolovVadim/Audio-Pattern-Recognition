@@ -12,7 +12,7 @@ from collections import Counter
 from sklearn.metrics import accuracy_score, f1_score
 
 # Load data
-df = pd.read_csv("full_dataset_5000ms_extended.csv")
+df = pd.read_csv("full_dataset_30000ms_extended.csv")
 
 print("Fold distribution:")
 print(df["fold"].value_counts())
